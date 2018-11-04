@@ -7,7 +7,7 @@
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="main" style="width: 1000px;height:400px;"></div>
+    <div id="main" style="width: 800px;height:400px;"></div>
     <div id="text"></div>
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts实例
@@ -25,8 +25,12 @@
     }
 }
 
-function setData(value) {
-    now = new Date(+now + 10);
+var currid = 0;
+var starttime = +new Date();
+function setData() {
+    now = new Date(+starttime + currid*1000/128);
+    currid++;
+    var value=(newdata[currid%newdata.length] - 2048) /4096 * 3.3;
     return {
         name: now.toString(),
         value: [
@@ -40,16 +44,52 @@ var newdata = [1997,2007,2013,2014,2019,2021,2028,2039,2048,2063,2075,2080,2086,
 ];
 
 var data = [];
-var now = +new Date();
 var oneDay = 24 * 3600 * 1000;
 var value = Math.random() * 1000;
 
-var currid = 0;
-for (var i = 0; i < 128*5; i++) {
-    data.push(setData(newdata[currid]));
-currid++;
-    //document.getElementById('main').innerHTML += newdata[i];
+for (var i = 0; i <= 128*5; i++) {
+    data.push(setData(((newdata[currid] - 2048) /4096 * 3.3)));
+}
 
+var markline = [];
+for(var i=20;i>=-20;i--){
+    var currline = {};
+    currline.yAxis = i/10;
+
+    if( i%5 == 0){
+        currline.lineStyle = {
+            type:'solid',
+            width:1
+        };
+    }
+    if(i%10 ==0){
+        currline.label={
+            show:true,
+            position:'start',
+            color:'#000000'
+        };
+    }
+    markline.push(currline);
+}
+
+for(var i=0;i<=128*5;i++){
+    var currline = {};
+    currline.xAxis = new Date(+starttime + i*8*1000/128);
+    if(i%5==0)
+    {
+        currline.lineStyle = {
+            type:'solid',
+            width:1
+        };
+    }
+    if(i%128 ==0){
+        currline.label={
+            show:true,
+            position:'start',
+            color:'#000000'
+        };
+    }
+    markline.push(currline);
 }
 
 option = {
@@ -68,17 +108,60 @@ option = {
         }
     },
     xAxis: {
-        type: 'time'
+        show:false,
+        type: 'time',
+        interval:1000,
+        axisLine:{
+            show:false,
+            lineStyle:{
+                width:2,
+                color:'#ff0000'
+            }
+        },
+        axisLabel:{
+        },
+        axisTick:{
+            show:false
+        }
     },
     yAxis: {
-        type: 'value'
+        show:false,
+        max:2,
+        min:-2,
+        interval:1,
+        type: 'value',
+        axisLine:{
+            show:false
+        },
+        axisTick:{
+            show:false,
+            interval:10
+        }
     },
     series: [{
         name: '模拟数据',
         type: 'line',
         showSymbol: false,
         hoverAnimation: false,
-        data: data
+        data: data,
+        lineStyle:{
+            type:'solid',
+            width:1.5,
+            color:'#000000'
+        },
+        markLine:{
+            silent : true,
+            label:{
+                show:false,
+                position:'start'
+            },
+            lineStyle:{
+                type:'solid',
+                width:.5
+            },
+            symbol:'none',                    
+            data: markline
+        }
     }],
     animation:false
 
@@ -87,18 +170,18 @@ option = {
 
 setInterval(function () {
 
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 16; i++) {
         data.shift();
         data.push(setData(newdata[currid]));
         currid++;
     }
-    if(currid>newdata.length) currid=0;
+    //if(currid>newdata.length) currid=0;
     myChart.setOption({
         series: [{
             data: data
         }]
     });
-}, 20);
+}, 125);
 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
